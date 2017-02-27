@@ -84,7 +84,7 @@ Transport.create().then(transport => {
 
     transport.sendWebSocketEvent("LOADED")
         .then((options) => rootLayout.renderGraph(options)
-            .then(d => transport.sendWebSocketEvent("PAGE_RENDER", { path: "test.png" })
+            .then(d => transport.sendWebSocketEvent("PAGE_RENDER", { path: `/data/test.png` })
                 .then(() => transport.sendCompleteMessae("hello world"))));
 
 

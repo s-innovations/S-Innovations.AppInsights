@@ -2,7 +2,10 @@
   "profiles": {
     "S-Innovations.AppInsights.QueryTool": {
       "commandName": "Project",
-      "commandLineArgs": "ff4e2b40-e790-43fb-ba2a-636e32669add 4d3g3zw12n7antl8i3al3epch0x6vaihhzi8tz00 \"traces | where  timestamp ^> ago(7d) | where customDimensions.MessageTemplate == 'Dequeued {@queueItem} with {id} queue lenght: {queueLenght}' | summarize max(todouble(customDimensions.queueLenght)) by bin(timestamp, 120m) | render timechart\""
+      "commandLineArgs": "ff4e2b40-e790-43fb-ba2a-636e32669add 4d3g3zw12n7antl8i3al3epch0x6vaihhzi8tz00 \"traces | where  timestamp ^> ago(7d) | where customDimensions.MessageTemplate == 'Dequeued {@queueItem} with {id} queue lenght: {queueLenght}' | summarize max(todouble(customDimensions.queueLenght)) by bin(timestamp, 120m) | render timechart\"",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
     }
   }
 }

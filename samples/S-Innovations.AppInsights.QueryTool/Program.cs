@@ -13,17 +13,20 @@ using Microsoft.Extensions.DependencyInjection;
 using WebApiContrib.Core.WebPages;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.NodeServices;
+using Microsoft.AspNetCore.Hosting.Internal;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace SInnovations.AppInsights.QueryTool
 {
     public static class RequireJS
     {
-        public static async Task<T2> RunAsync<T1,T2>(INodeServices node,  string module, string host,T1 options )
+        public static async Task<T2> RunAsync<T1, T2>(INodeServices node, string baseUrl, string module, string host, T1 options)
         {
             var sb = new StringBuilder();
 
+            sb.AppendLine("console.log('starting');");
             sb.AppendLine("var requirejs = require(\"requirejs\");");
-            sb.AppendLine($"var r = requirejs.config({{  packages: [{{name: \"{module}\", location: \"libs/{module}/src\"}}], baseUrl:'{Path.Combine(Directory.GetCurrentDirectory(), "artifacts", "app").Replace("\\", "/")}'}});");
+            sb.AppendLine($"var r = requirejs.config({{  packages: [{{name: \"{module}\", location: \"libs/{module}/src\"}}], baseUrl:'{baseUrl}'}});");
 
             sb.AppendLine("module.exports= function (callback,data){ try{");
             sb.AppendLine($"r([\"{module}/runner\"], function (program) {{ program.default(data, callback); }},function(err){{ console.log('host failed'); callback(err,null) }})");
@@ -69,48 +72,57 @@ namespace SInnovations.AppInsights.QueryTool
 
         private static async Task RunAsync(string[] args, CancellationToken token)
         {
-            args[2] = args[2].Replace("^>",">").Replace("^<", "<"); ;
-          
-            
-            string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            args[2] = args[2].Replace("^>", ">").Replace("^<", "<"); ;
+
+
+
 
             var builder = new ConfigurationBuilder()
                .SetBasePath(Directory.GetCurrentDirectory())
                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-               .AddJsonFile($"appsettings.{environment}.json", optional: true)
                .AddEnvironmentVariables();
             var config = builder.Build();
 
 
-            IServiceProvider provider = null;
+            var _options = new WebHostOptions(config);
+            var appEnvironment = PlatformServices.Default.Application;
+
+            var applicationName = _options.ApplicationName ?? appEnvironment.ApplicationName;
+
+            var environment = new HostingEnvironment();
+            environment.Initialize(applicationName, Directory.GetCurrentDirectory(), _options);
+
+
             var url = "http://localhost:5000";
+            var basePath = environment.IsProduction() ?
+                   environment.ContentRootPath
+                   : Path.Combine(environment.ContentRootPath, "artifacts", "app");
+
+
             using (var host = new WebHostBuilder()
                 .UseKestrel()
                 .UseConfiguration(config)
                 .UseUrls(url)
-                .UseWebRoot("artifacts/app")
+                .UseWebRoot(basePath)
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .ConfigureLogging(l => l.AddConsole(config.GetSection("Logging")))
                 .ConfigureServices(ConfigureServices)
                 .Configure(app =>
                 {
-                        // to do - wire in our HTTP endpoints
+                    // to do - wire in our HTTP endpoints
 
-                        app.UseStaticFiles();
+                    app.UseStaticFiles();
                     app.UseWebPages();
-
-                    provider = app.ApplicationServices;
                 })
-                .Build()
-
-                )
+                .Build())
             {
-
+               
                 host.Start();// (token); //.Run(token);
 
-                var result = await RequireJS.RunAsync<object,string>(provider.GetService<INodeServices>(), "AppInsightsQueryReporter", url, new
+
+                var result = await RequireJS.RunAsync<object, string>(host.Services.GetService<INodeServices>(), basePath.Replace("\\", "/"), "AppInsightsQueryReporter", url, new
                 {
-                    appId= args[0],
+                    appId = args[0],
                     appKey = args[1],
                     query = args[2]
                 });
@@ -130,7 +142,7 @@ namespace SInnovations.AppInsights.QueryTool
         private static void ConfigureServices(IServiceCollection services)
         {
             services.AddWebPages(new WebPagesOptions { RootViewName = "index", ViewsFolderName = "src" });
-
+            Console.WriteLine(Directory.GetCurrentDirectory());
             services.AddNodeServices((o) =>
             {
                 o.ProjectPath = Directory.GetCurrentDirectory(); // PlatformServices.Default.Application.ApplicationBasePath + "/../../..";

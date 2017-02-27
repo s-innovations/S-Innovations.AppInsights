@@ -1,16 +1,17 @@
-﻿function npmcopy(grunt) {
+﻿
+function npmcopy(grunt) {
     var data = grunt.file.readJSON("npmcopy.json");
     var packages = grunt.file.readJSON("package.json");
 
     for (var key in data) {
         var copy = [];
         if (typeof data[key] === "string") {
-            if (packages.dependencies[data[key].split('/')[0]]) {
+            if (packages.dependencies[data[key].split('/')[0]] || packages.devDependencies[data[key].split('/')[0]]) {
                 copy.push(data[key]);
             }
         } else {
             for (var i in data[key]) {
-                if (packages.dependencies[data[key][i].split('/')[0]]) {
+                if (packages.dependencies[data[key][i].split('/')[0]] || packages.devDependencies[data[key][i].split('/')[0]]) {
                     copy.push(data[key][i]);
                 }
             }
@@ -22,6 +23,7 @@
             data[key] = copy;
         }
     }
+    console.log(data);
     return data;
 }
 
