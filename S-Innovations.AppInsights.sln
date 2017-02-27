@@ -5,6 +5,11 @@ VisualStudioVersion = 15.0.26206.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "S-Innovations.AppInsights.QueryTool", "samples\S-Innovations.AppInsights.QueryTool\S-Innovations.AppInsights.QueryTool.csproj", "{6D528E66-76AD-4E73-9260-A3CA5AEF7D39}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{470A942E-DFC2-469A-81F1-77010FBCF7FC}"
+	ProjectSection(SolutionItems) = preProject
+		nuget.config = nuget.config
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -12,9 +12,37 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using WebApiContrib.Core.WebPages;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.NodeServices;
 
 namespace SInnovations.AppInsights.QueryTool
 {
+    public static class RequireJS
+    {
+        public static async Task<T2> RunAsync<T1,T2>(INodeServices node,  string module, string host,T1 options )
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendLine("var requirejs = require(\"requirejs\");");
+            sb.AppendLine($"var r = requirejs.config({{  packages: [{{name: \"{module}\", location: \"libs/{module}/src\"}}], baseUrl:'{Path.Combine(Directory.GetCurrentDirectory(), "artifacts", "app").Replace("\\", "/")}'}});");
+
+            sb.AppendLine("module.exports= function (callback,data){ try{");
+            sb.AppendLine($"r([\"{module}/runner\"], function (program) {{ program.default(data, callback); }},function(err){{ console.log('host failed'); callback(err,null) }})");
+
+
+
+            sb.AppendLine("}catch(error){console.log('host catch');callback(error,null); }}");
+
+            Directory.CreateDirectory("tmp");
+            File.WriteAllText("tmp/run.js", sb.ToString());
+
+            return await node.InvokeAsync<T2>("./tmp/run", new
+            {
+                host = host,
+                options = options
+
+            });
+        }
+    }
     class Program
     {
         private static readonly CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
@@ -41,6 +69,9 @@ namespace SInnovations.AppInsights.QueryTool
 
         private static async Task RunAsync(string[] args, CancellationToken token)
         {
+            args[2] = args[2].Replace("^>",">").Replace("^<", "<"); ;
+          
+            
             string environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
 
             var builder = new ConfigurationBuilder()
@@ -49,65 +80,61 @@ namespace SInnovations.AppInsights.QueryTool
                .AddJsonFile($"appsettings.{environment}.json", optional: true)
                .AddEnvironmentVariables();
             var config = builder.Build();
-             
-            using (var watcher = new FileSystemWatcher("src", "**/*.html"))
-            {
-                watcher.IncludeSubdirectories = true;
-                watcher.Changed += Wa_Changed;
-                watcher.NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size;
-                watcher.EnableRaisingEvents = true;
 
-                using (var host = new WebHostBuilder()
-                    .UseKestrel()
-                    .UseConfiguration(config)
-                    .UseWebRoot("artifacts/app")
-                    .UseContentRoot(Directory.GetCurrentDirectory())
-                    .ConfigureLogging(l => l.AddConsole(config.GetSection("Logging")))
-                    .ConfigureServices(ConfigureServices)
-                    .Configure(app =>
-                    {
-                    // to do - wire in our HTTP endpoints
 
-                    app.UseStaticFiles();
-                        app.UseWebPages();
-                    })
-                    .Build())
+            IServiceProvider provider = null;
+            var url = "http://localhost:5000";
+            using (var host = new WebHostBuilder()
+                .UseKestrel()
+                .UseConfiguration(config)
+                .UseUrls(url)
+                .UseWebRoot("artifacts/app")
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .ConfigureLogging(l => l.AddConsole(config.GetSection("Logging")))
+                .ConfigureServices(ConfigureServices)
+                .Configure(app =>
                 {
+                        // to do - wire in our HTTP endpoints
 
-                    host.Start();// (token); //.Run(token);
+                        app.UseStaticFiles();
+                    app.UseWebPages();
 
-                    await Task.Delay(Timeout.Infinite, token);
-                   
+                    provider = app.ApplicationServices;
+                })
+                .Build()
 
-                    HttpClient client = new HttpClient();
-                    client.DefaultRequestHeaders.Accept.Add(
-                        new MediaTypeWithQualityHeaderValue("application/json"));
-                    client.DefaultRequestHeaders.Add("x-api-key", "4d3g3zw12n7antl8i3al3epch0x6vaihhzi8tz00");
-                    var req = string.Format(URL, "ff4e2b40-e790-43fb-ba2a-636e32669add", "query");
+                )
+            {
 
-                    var query = @"{""csl"":""set truncationmaxrecords = 10000; set truncationmaxsize = 67108864; traces | where  timestamp > ago(7d) | where customDimensions.MessageTemplate == \""Dequeued {@queueItem} with {id} queue lenght: {queueLenght}\"" | summarize max(todouble(customDimensions.queueLenght))     by bin(timestamp, 120m) | render timechart""}";
+                host.Start();// (token); //.Run(token);
 
-                    HttpResponseMessage response = await client.PostAsync(req, new StringContent(query, Encoding.UTF8, "application/json"));
-                    if (response.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine(JToken.Parse(await response.Content.ReadAsStringAsync()).ToString());
-                    }
-                    else
-                    {
-                        Console.WriteLine(response.ReasonPhrase);
-                    }
-                }
+                var result = await RequireJS.RunAsync<object,string>(provider.GetService<INodeServices>(), "AppInsightsQueryReporter", url, new
+                {
+                    appId= args[0],
+                    appKey = args[1],
+                    query = args[2]
+                });
+                Console.WriteLine(result.ToString());
+
+
+
+
+
+                //   await Task.Delay(Timeout.Infinite, token);
+
+
             }
         }
 
-        private static void Wa_Changed(object sender, FileSystemEventArgs e)
-        {
-            Console.WriteLine(e.FullPath);
-        }
 
         private static void ConfigureServices(IServiceCollection services)
         {
-            services.AddWebPages(new WebPagesOptions { RootViewName = "index", ViewsFolderName = "./" });
+            services.AddWebPages(new WebPagesOptions { RootViewName = "index", ViewsFolderName = "src" });
+
+            services.AddNodeServices((o) =>
+            {
+                o.ProjectPath = Directory.GetCurrentDirectory(); // PlatformServices.Default.Application.ApplicationBasePath + "/../../..";
+            });
         }
     }
 }

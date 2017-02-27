@@ -9,9 +9,13 @@
 <head>
     <title>Query Tool</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
-
+    <script src="libs/es6-promise/es6-promise.auto.min.js"></script>
     <script src="libs/requirejs/require.js"></script>
-
+    <style>
+        html,body{
+            padding:0;margin:0;height:100%;width:100%;
+        }
+    </style>
     <script>
         requirejs.onError = function (err) {
             console.log(err.requireType);
@@ -23,6 +27,13 @@
         }; 
 
         require.config({
+            shim: {
+                'c3': {
+                    //These script dependencies should be loaded before loading
+                    //backbone.js
+                    deps: ['css!libs/c3/c3.min.css'],
+                }
+            },
             paths: {
                 "css": "libs/requirejs/css",
                 "text": "libs/requirejs/text",
@@ -32,6 +43,8 @@
                 "knockout": "libs/knockout/knockout-latest",
                 "template": "libs/kolayout/src/template",
                 "stringTemplateEngine": "libs/kolayout/src/stringTemplateEngine",
+                "c3": "libs/c3/c3.min",
+                "d3": "libs/c3/d3.min",
             },
             packages: [
                 {
@@ -51,9 +64,7 @@
 
 </head>
 <body>
-    <!-- koLayout : $data-->
-
-	
+    <!-- koLayout : $data-->	
     <script>
         require(["AppInsightsQueryReporter"])
     </script>

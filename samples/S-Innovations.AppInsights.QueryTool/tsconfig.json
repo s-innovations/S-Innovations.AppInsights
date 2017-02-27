@@ -1,7 +1,7 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "module": "umd",
+    "module": "amd",
     "target": "es5",
     "sourceMap": true,
     "emitDecoratorMetadata": true,
