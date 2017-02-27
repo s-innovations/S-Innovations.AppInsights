@@ -1,8 +1,8 @@
 ﻿# AppInsights QueryTool
 
+I wanted to be able to extract graphs from application insights from a API. Since no current solution is ready yet - I made a small tool, or proof of concept that solves the problem. It runs in docker using dotnet core and can extract queries and render it as timechart currently.
+
 https://twitter.com/pksorensen/status/836293950663241728
-
-
 
 
 ![Wanted Result](https://pbs.twimg.com/media/C5scVYtWYAIZdPo.png:large)
