@@ -1,0 +1,19 @@
+{
+  "nprogress": "nprogress/nprogress.*",
+  "requirejs": [ "requirejs/require.js", "requirejs-text/text.js", "require-css/css.js", "domready/ready.js", "domready/ready.min.js" ],
+  "css-builder": [ "require-css/css-builder.js", "require-css/normalize.js" ],
+  "headroom": "headroom.js/dist/headroom.js",
+  "classie": [ "classie/lib/classie.js", "classie/lib/class_list_ployfill.js" ],
+  "font-awesome/fonts": [ "font-awesome/fonts" ],
+  "kolayout": [ "kolayout/dist" ],
+  "knockout": [ "knockout/build/output" ],
+  "q": [ "q/q.js" ],
+  "open-sans-fontface": [ "open-sans-fontface/fonts", "open-sans-fontface/open-sans.less" ],
+  "openlayers": [ "openlayers/dist" ],
+  "proj4": [ "proj4/dist/proj4.js" ],
+  "jsonpath": [ "jsonpath/jsonpath.min.js" ],
+  "jquery": [ "jquery/dist" ],
+  "signalr": [ "signalr/jquery.signalR.min.js" ],
+  "c3": [ "d3/d3.min.js", "c3/c3.min.js", "c3/c3.min.css" ],
+  "oidc-client": [ "oidc-client/dist" ]
+}

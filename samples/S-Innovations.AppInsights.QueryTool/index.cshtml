@@ -1,0 +1,61 @@
+﻿
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Query Tool</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+
+    <script src="libs/requirejs/require.js"></script>
+
+    <script>
+        requirejs.onError = function (err) {
+            console.log(err.requireType);
+            if (err.requireType === 'timeout') {
+                console.log('modules: ' + err.requireModules);
+            }
+
+            throw err;
+        }; 
+
+        require.config({
+            paths: {
+                "css": "libs/requirejs/css",
+                "text": "libs/requirejs/text",
+                "domReady": "libs/requirejs/ready",
+                "modernizr": "libs/modernizr/modernizr",
+                "nprogress": "libs/nprogress/nprogress",
+                "knockout": "libs/knockout/knockout-latest",
+                "template": "libs/kolayout/src/template",
+                "stringTemplateEngine": "libs/kolayout/src/stringTemplateEngine",
+            },
+            packages: [
+                {
+                    name: "kolayout",
+                    location: "libs/kolayout/src",
+                    main: "index"
+                },                
+                {
+                    name: "AppInsightsQueryReporter",
+                    location: "libs/AppInsightsQueryReporter/src",
+                    main: "index"
+                }
+            ]
+        })
+       
+    </script>
+
+</head>
+<body>
+    <!-- koLayout : $data-->
+
+	
+    <script>
+        require(["AppInsightsQueryReporter"])
+    </script>
+</body>
+</html>
